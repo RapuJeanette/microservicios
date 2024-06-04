@@ -25,4 +25,9 @@ public class AuthController {
         return new ResponseEntity<>("User registered successfully", HttpStatus.OK);
     }
 
+    @GetMapping("/hello")
+    public String hello() {
+        return "Hello, world!";
+    }
+
 }
