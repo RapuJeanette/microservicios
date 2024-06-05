@@ -52,6 +52,14 @@ public class Producto {
         this.cantidad = cantidad;
     }
 
+    public int getCantidadDisponible() {
+        return cantidad;
+    }
+
+    public void setCantidadDisponible(int cantidadDisponible) {
+        this.cantidad = cantidadDisponible;
+    }
+
     @Override
     public String toString() {
         return "Producto{" +

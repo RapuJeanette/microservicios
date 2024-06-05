@@ -4,6 +4,8 @@ import authservice.auth_service.model.Producto;
 import authservice.auth_service.model.Venta;
 import authservice.auth_service.Service.VentaService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,9 +17,10 @@ public class VentaController {
     @Autowired
     private VentaService ventaService;
 
-    @PostMapping
-    public Venta realizarVenta(@RequestParam String vendedorId, @RequestBody List<Producto> productos) {
-        return ventaService.realizarVenta(vendedorId, productos);
+     @PostMapping("/realizar")
+    public ResponseEntity<Venta> realizarVenta(@RequestParam String vendedorId, @RequestParam String clienteId, @RequestBody List<Producto> productos, @RequestParam double montoPagado) {
+        Venta venta = ventaService.realizarVenta(vendedorId, clienteId, productos, montoPagado);
+        return new ResponseEntity<>(venta, HttpStatus.CREATED);
     }
 
     @GetMapping("/{vendedorId}")
