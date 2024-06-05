@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class User {
     @Id
     private String id;
+    private String nombre;
     private String username;
     private String password;
     private String role;
@@ -15,7 +16,8 @@ public class User {
     }
 
     // Constructor con argumentos
-    public User(String username, String password, String role) {
+    public User(String name, String username, String password, String role) {
+        this.nombre= name;
         this.username = username;
         this.password = password;
         this.role = role;
@@ -28,6 +30,14 @@ public class User {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
     }
 
     public String getUsername() {
