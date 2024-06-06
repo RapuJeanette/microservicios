@@ -14,7 +14,8 @@ public class CompraController {
     @Autowired
     private CompraService compraService;
 
-    @PostMapping
+    @PostMapping("/crear")
+    @ResponseBody
     public Compra realizarCompra(@RequestParam String usuarioId, @RequestBody List<Producto> productos) {
         return compraService.realizarCompra(usuarioId, productos);
     }

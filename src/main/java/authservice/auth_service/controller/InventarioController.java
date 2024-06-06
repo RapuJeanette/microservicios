@@ -24,7 +24,7 @@ public class InventarioController {
         return inventarioService.obtenerProductoPorId(id);
     }
 
-    @PostMapping
+    @PostMapping("/crear")
     public Producto agregarProducto(@RequestBody Producto producto) {
         return inventarioService.agregarProducto(producto);
     }
