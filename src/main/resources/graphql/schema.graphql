@@ -1,0 +1,31 @@
+# src/main/resources/graphql/schema.graphqls
+
+type Producto {
+    id: ID!
+    nombre: String!
+    precio: Float!
+    cantidad: Int!
+}
+
+type Compra {
+    id: ID!
+    usuarioId: String!
+    productos: [Producto!]!
+    fecha: String!
+    total: Float!
+}
+
+type Query {
+    obtenerComprasPorUsuario(usuarioId: String!): [Compra!]!
+}
+
+type Mutation {
+    realizarCompra(usuarioId: String!, productos: [ProductoInput!]!): Compra!
+}
+
+input ProductoInput {
+    id: ID!
+    nombre: String!
+    precio: Float!
+    cantidad: Int!
+}

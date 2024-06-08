@@ -3,7 +3,6 @@ package authservice.auth_service.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Date;
 import java.util.List;
 
 @Document(collection = "compras")
@@ -12,13 +11,13 @@ public class Compra {
     private String id;
     private String usuarioId;
     private List<Producto> productos;
-    private Date fecha;
+    private String fecha;
     private double total;
 
     public Compra() {
     }
 
-    public Compra(String usuarioId, List<Producto> productos, Date fecha, double total) {
+    public Compra(String usuarioId, List<Producto> productos, String fecha, double total) {
         this.usuarioId = usuarioId;
         this.productos = productos;
         this.fecha = fecha;
@@ -49,11 +48,11 @@ public class Compra {
         this.productos = productos;
     }
 
-    public Date getFecha() {
+    public String getFecha() {
         return fecha;
     }
 
-    public void setFecha(Date fecha) {
+    public void setFecha(String fecha) {
         this.fecha = fecha;
     }
 
