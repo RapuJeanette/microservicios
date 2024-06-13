@@ -28,6 +28,13 @@ public class ProductoController {
         return new ResponseEntity<>(nuevoProducto, HttpStatus.CREATED);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Producto> obtenerProductoPorId(@PathVariable("id") String id) {
+        Optional<Producto> productoOptional = productoRepository.findById(id);
+        return productoOptional.map(producto -> new ResponseEntity<>(producto, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
     @PutMapping("/editar/{id}")
     public ResponseEntity<Producto> editarProducto(@PathVariable("id") String id, @RequestBody Producto producto) {
         Producto productoExistente = productoRepository.findById(id).orElse(null);
@@ -40,6 +47,17 @@ public class ProductoController {
         return new ResponseEntity<>(productoEditado, HttpStatus.OK);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<Producto> actualizarProducto(@PathVariable("id") String id, @RequestBody Producto producto) {
+        Optional<Producto> productoOptional = productoRepository.findById(id);
+        if (!productoOptional.isPresent()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        producto.setId(id);
+        Producto actualizadoProducto = productoRepository.save(producto);
+        return new ResponseEntity<>(actualizadoProducto, HttpStatus.OK);
+    }
+
     @DeleteMapping("/eliminar/{id}")
     public ResponseEntity<HttpStatus> eliminarProducto(@PathVariable("id") String id) {
         try {
@@ -50,14 +68,4 @@ public class ProductoController {
         }
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Producto> verProducto(@PathVariable String id) {
-        Optional<Producto> productoOptional = productoRepository.findById(id);
-        if (productoOptional.isPresent()) {
-            Producto producto = productoOptional.get();
-            return new ResponseEntity<>(producto, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
 }

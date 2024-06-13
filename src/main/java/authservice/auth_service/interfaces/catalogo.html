@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogos</title>
+</head>
+<body>
+    <h1>Administrador de Catálogos</h1>
+    
+    <h2>Crear Nuevo Catálogo</h2>
+    <input type="text" id="nombreCatalogo" placeholder="Nombre del catálogo">
+    <button onclick="crearCatalogo()">Crear</button>
+
+    <h2>Lista de Catálogos</h2>
+    <ul id="listaCatalogos"></ul>
+
+    <script>
+        function obtenerTodosLosCatalogos() {
+            fetch('/catalogos')
+                .then(response => response.json())
+                .then(data => {
+                    const listaCatalogos = document.getElementById('listaCatalogos');
+                    listaCatalogos.innerHTML = '';
+                    data.forEach(catalogo => {
+                        const li = document.createElement('li');
+                        li.textContent = catalogo.nombre;
+                        listaCatalogos.appendChild(li);
+                    });
+                });
+        }
+
+        function crearCatalogo() {
+            const nombre = document.getElementById('nombreCatalogo').value;
+            fetch('/catalogos/crear', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ nombre: nombre })
+            })
+            .then(response => {
+                if (response.ok) {
+                    obtenerTodosLosCatalogos();
+                } else {
+                    alert('Error al crear el catálogo');
+                }
+            });
+        }
+
+        obtenerTodosLosCatalogos();
+    </script>
+</body>
+</html>

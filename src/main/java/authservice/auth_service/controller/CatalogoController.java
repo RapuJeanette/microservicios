@@ -1,8 +1,5 @@
 package authservice.auth_service.controller;
 
-import authservice.auth_service.repository.CatalogoRepository;
-import authservice.auth_service.model.Catalogo;
-
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +11,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import authservice.auth_service.model.Catalogo;
+import authservice.auth_service.repository.CatalogoRepository;
 
 @RestController
 @RequestMapping("/catalogos")
@@ -41,4 +41,7 @@ public class CatalogoController {
         }
         return new ResponseEntity<>(catalogo, HttpStatus.OK);
     }
+
+    
 }
+

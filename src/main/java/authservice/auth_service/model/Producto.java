@@ -10,14 +10,18 @@ public class Producto {
     private String nombre;
     private double precio;
     private int cantidad;
+    private String imagen;
+    private String categoria;
 
     public Producto() {
     }
 
-    public Producto(String nombre, double precio, int cantidad) {
+    public Producto(String nombre, double precio, int cantidad, String imagen, String categoria) {
         this.nombre = nombre;
         this.precio = precio;
         this.cantidad = cantidad;
+        this.imagen = imagen;
+        this.categoria = categoria;
     }
 
     public String getId() {
@@ -60,6 +64,22 @@ public class Producto {
         this.cantidad = cantidadDisponible;
     }
 
+    public String getImagen() {
+        return imagen;
+    }
+
+    public void setImagen(String imagen) {
+        this.imagen = imagen;
+    }
+
+    public String getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(String categoria) {
+        this.categoria = categoria;
+    }
+
     @Override
     public String toString() {
         return "Producto{" +
@@ -67,6 +87,8 @@ public class Producto {
                 ", nombre='" + nombre + '\'' +
                 ", precio=" + precio +
                 ", cantidad=" + cantidad +
+                ", imagen='" + imagen + '\'' +
+                ", categoria='" + categoria + '\'' +
                 '}';
     }
 }
