@@ -1,14 +1,30 @@
 package authservice.auth_service.controller;
 
-import authservice.auth_service.model.Producto;
-import authservice.auth_service.repository.ProductoRepository;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import java.util.Optional;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.util.List;
+import authservice.auth_service.model.Producto;
+import authservice.auth_service.repository.ProductoRepository;
 
 @RestController
 @RequestMapping("/productos")
@@ -16,6 +32,37 @@ public class ProductoController {
     @Autowired
     private ProductoRepository productoRepository;
 
+    private static String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads";
+
+    @PostMapping("/upload")
+    public String uploadImage(@RequestParam("image") MultipartFile file) throws IOException {
+        if (file.isEmpty()) {
+            return "Por favor seleccione un archivo para cargar.";
+        }
+
+        try {
+            // Crear directorio si no existe
+            File uploadDir = new File(UPLOAD_DIR);
+            if (!uploadDir.exists()) {
+                uploadDir.mkdirs();
+            }
+
+            // Guardar archivo en el directorio
+            Path filePath = Paths.get(UPLOAD_DIR, file.getOriginalFilename());
+            Files.write(filePath, file.getBytes());
+
+            // Devolver la URL del archivo cargado
+            String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
+                    .path("/uploads/")
+                    .path(file.getOriginalFilename())
+                    .toUriString();
+
+            return fileDownloadUri;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "Error al cargar el archivo: " + e;
+        }
+    }
     @GetMapping
     public ResponseEntity<List<Producto>> obtenerTodosLosProductos() {
         List<Producto> productos = productoRepository.findAll();
@@ -24,11 +71,31 @@ public class ProductoController {
 
     @PostMapping("/crear")
     public ResponseEntity<Producto> crearProducto(@RequestBody Producto producto) {
-        Producto nuevoProducto = productoRepository.save(producto);
-        return new ResponseEntity<>(nuevoProducto, HttpStatus.CREATED);
+        try { 
+            Producto nuevoProducto = new Producto(
+                producto.getNombre(),
+                producto.getPrecio(),
+                producto.getCantidad(),
+                null,
+                producto.getCategoria() 
+            );
+            Producto productoCreado = productoRepository.save(nuevoProducto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(productoCreado);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
-    @GetMapping("/{id}")
+    @PutMapping("/{id}")
+    public Producto actualizarImagenProducto(@PathVariable String id, @RequestParam("imagen") MultipartFile imagen) throws IOException {
+        Producto producto = productoRepository.findById(id).orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+        String imagenUrl = uploadImage(imagen);
+        producto.setImagen(imagenUrl);
+        return productoRepository.save(producto);
+    }
+
+    @GetMapping("/ver/{id}")
     public ResponseEntity<Producto> obtenerProductoPorId(@PathVariable("id") String id) {
         Optional<Producto> productoOptional = productoRepository.findById(id);
         return productoOptional.map(producto -> new ResponseEntity<>(producto, HttpStatus.OK))
@@ -46,8 +113,8 @@ public class ProductoController {
         Producto productoEditado = productoRepository.save(producto);
         return new ResponseEntity<>(productoEditado, HttpStatus.OK);
     }
-
-    @PutMapping("/{id}")
+ 
+    @PutMapping("/actualizar/{id}")
     public ResponseEntity<Producto> actualizarProducto(@PathVariable("id") String id, @RequestBody Producto producto) {
         Optional<Producto> productoOptional = productoRepository.findById(id);
         if (!productoOptional.isPresent()) {
@@ -58,14 +125,14 @@ public class ProductoController {
         return new ResponseEntity<>(actualizadoProducto, HttpStatus.OK);
     }
 
-    @DeleteMapping("/eliminar/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> eliminarProducto(@PathVariable("id") String id) {
         try {
             productoRepository.deleteById(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        } 
     }
 
 }

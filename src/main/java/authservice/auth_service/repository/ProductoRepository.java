@@ -8,5 +8,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ProductoRepository extends MongoRepository<Producto, String> {
     @Query("{'_id': ?0 }")
-    Producto crearProducto(Producto producto);  
+    Producto crearProducto(Producto producto);
+
 }

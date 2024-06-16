@@ -1,15 +1,19 @@
 package authservice.auth_service.Service;
 
-import authservice.auth_service.model.EstadoPago;
-import authservice.auth_service.model.Producto;
-import authservice.auth_service.model.Venta;
-import authservice.auth_service.repository.VentaRepository;
+import java.time.LocalDate;
+import java.time.DayOfWeek;
+import java.time.ZoneId;
+import java.time.temporal.TemporalAdjusters;
+import java.util.Date;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import authservice.auth_service.model.Producto;
+import authservice.auth_service.model.Venta;
+import authservice.auth_service.repository.VentaRepository;
+import authservice.auth_service.repository.ProductoRepository;
 
 @Service
 public class VentaService {
@@ -17,35 +21,71 @@ public class VentaService {
     @Autowired
     private VentaRepository ventaRepository;
 
-    public Venta realizarVenta(String vendedorId, String clienteId, List<Producto> productos, double montoPagado) {
-        double total = calcularTotal(productos);
-        EstadoPago estadoPago = montoPagado >= total ? EstadoPago.PAGO_COMPLETO : EstadoPago.PAGO_PARCIAL;
-        Venta venta = new Venta(vendedorId, clienteId, productos, total, montoPagado, estadoPago);
-        return ventaRepository.save(venta);
-    }
+    @Autowired
+    private ProductoRepository productoRepository;
 
-    private double calcularTotal(List<Producto> productos) {
-        return productos.stream()
-                       .mapToDouble(p -> p.getPrecio() * p.getCantidad())
-                       .sum();
+    public Venta realizarVenta(Venta ventaRequest) {
+        String[] productosIds = ventaRequest.getProductos().split(",");
+
+        for (String productoId : productosIds) {
+            Producto producto = productoRepository.findById(productoId.trim()).orElseThrow(() -> new RuntimeException("Producto no encontrado: " + productoId));
+
+            if (producto.getCantidadDisponible() < ventaRequest.getCantidad()) {
+                throw new RuntimeException("No hay suficiente stock para el producto: " + producto.getNombre());
+            }
+
+            producto.setCantidadDisponible(producto.getCantidadDisponible() - ventaRequest.getCantidad());
+            productoRepository.save(producto);
+        }
+        double total = ventaRequest.getCantidad() * ventaRequest.getPrecioUnitario();
+        ventaRequest.setTotal(total);
+
+        return ventaRepository.save(ventaRequest);
     }
 
     public List<Venta> obtenerVentasPorVendedor(String vendedorId) {
         return ventaRepository.findByVendedorId(vendedorId);
     }
 
-    public Map<String, Object> generarReporteVentas() {
-        List<Venta> ventas = ventaRepository.findAll();
-        
-        double totalVentas = ventas.stream().mapToDouble(Venta::getTotal).sum();
-        
-        Map<String, Long> productosVendidos = ventas.stream()
-            .flatMap(venta -> venta.getProductos().stream())
-            .collect(Collectors.groupingBy(Producto::getNombre, Collectors.counting()));
+    public List<Venta> obtenerTodasLasVentas() {
+      return ventaRepository.findAll();
+    }
 
-        return Map.of(
-            "totalVentas", totalVentas,
-            "productosVendidos", productosVendidos
-        );
+    public List<Venta> obtenerVentasPorPeriodo(Date inicio, Date fin) {
+        return ventaRepository.findByFechaBetween(inicio, fin);
+    } 
+
+    public List<Venta> obtenerVentasDiarias() {
+        LocalDate hoy = LocalDate.now();
+        Date inicio = Date.from(hoy.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date fin = Date.from(hoy.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        return obtenerVentasPorPeriodo(inicio, fin);
+    }
+
+    public List<Venta> obtenerVentasSemanales() {
+        LocalDate hoy = LocalDate.now();
+        LocalDate inicioSemana = hoy.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate finSemana = hoy.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+        Date inicio = Date.from(inicioSemana.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date fin = Date.from(finSemana.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        return obtenerVentasPorPeriodo(inicio, fin);
+    }
+
+    public List<Venta> obtenerVentasMensuales() {
+        LocalDate hoy = LocalDate.now();
+        LocalDate inicioMes = hoy.with(TemporalAdjusters.firstDayOfMonth());
+        LocalDate finMes = hoy.with(TemporalAdjusters.lastDayOfMonth());
+        Date inicio = Date.from(inicioMes.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date fin = Date.from(finMes.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        return obtenerVentasPorPeriodo(inicio, fin);
+    }
+
+    public List<Venta> obtenerVentasAnuales() {
+        LocalDate hoy = LocalDate.now();
+        LocalDate inicioAno = hoy.with(TemporalAdjusters.firstDayOfYear());
+        LocalDate finAno = hoy.with(TemporalAdjusters.lastDayOfYear());
+        Date inicio = Date.from(inicioAno.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date fin = Date.from(finAno.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        return obtenerVentasPorPeriodo(inicio, fin);
     }
 }

@@ -7,6 +7,9 @@ import authservice.auth_service.repository.VentaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.ZoneId;
+import java.time.temporal.TemporalAdjusters;
+import java.util.Date;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -21,21 +24,6 @@ public class ReporteService {
 
     @Autowired
     private CompraRepository compraRepository;
-
-    public Map<String, Object> generarReporteVentas() {
-        List<Venta> ventas = ventaRepository.findAll();
-        
-        double totalVentas = ventas.stream().mapToDouble(Venta::getTotal).sum();
-        
-        Map<String, Long> productosVendidos = ventas.stream()
-            .flatMap(venta -> venta.getProductos().stream())
-            .collect(Collectors.groupingBy(p -> p.getNombre(), Collectors.counting()));
-
-        return Map.of(
-            "totalVentas", totalVentas,
-            "productosVendidos", productosVendidos
-        );
-    }
 
     public Map<String, Object> generarReporteCompras() {
         List<Compra> compras = compraRepository.findAll();
@@ -52,53 +40,6 @@ public class ReporteService {
         );
     }
 
-    public Map<String, Object> generarReporteComprasDia(LocalDate fecha) {
-        LocalDate inicioDia = fecha.atStartOfDay().toLocalDate();
-        LocalDate finDia = inicioDia.plusDays(1).atStartOfDay().minusNanos(1).toLocalDate();
-
-        long cantidadCompras = ventaRepository.countByFechaBetween(inicioDia, finDia);
-        double totalCompras = sumarTotalComprasPorFecha(inicioDia, finDia);
-
-        return crearReporte("Día", fecha, cantidadCompras, totalCompras);
-    }
-
-    public Map<String, Object> generarReporteComprasMes(int mes, int anio) {
-        LocalDate inicioMes = LocalDate.of(anio, mes, 1);
-        LocalDate finMes = inicioMes.plusMonths(1).minusDays(1);
-
-        long cantidadCompras = ventaRepository.countByFechaBetween(inicioMes, finMes);
-        double totalCompras = sumarTotalComprasPorFecha(inicioMes, finMes);
-
-        return crearReporte("Mes", inicioMes, cantidadCompras, totalCompras);
-    }
-
-    public Map<String, Object> generarReporteComprasSemana(LocalDate fecha) {
-        LocalDate inicioSemana = fecha.with(DayOfWeek.MONDAY); // Obtener el inicio de la semana
-        LocalDate finSemana = inicioSemana.plusDays(6); // Obtener el fin de la semana
-
-        long cantidadCompras = ventaRepository.countByFechaBetween(inicioSemana, finSemana);
-        double totalCompras = sumarTotalComprasPorFecha(inicioSemana, finSemana);
-
-        return crearReporte("Semana", inicioSemana, cantidadCompras, totalCompras);
-    }
-
-    public Map<String, Object> generarReporteComprasAnio(int anio) {
-        LocalDate inicioAnio = LocalDate.of(anio, 1, 1);
-        LocalDate finAnio = LocalDate.of(anio, 12, 31);
-
-        long cantidadCompras = ventaRepository.countByFechaBetween(inicioAnio, finAnio);
-        double totalCompras = sumarTotalComprasPorFecha(inicioAnio, finAnio);
-
-        return crearReporte("Año", inicioAnio, cantidadCompras, totalCompras);
-    }
-
-    private double sumarTotalComprasPorFecha(LocalDate inicio, LocalDate fin) {
-        List<Venta> compras = ventaRepository.findByFechaBetween(inicio, fin);
-        return compras.stream()
-                .mapToDouble(Venta::getTotal)
-                .sum();
-    }
-
     private Map<String, Object> crearReporte(String tipoReporte, LocalDate fecha, long cantidadCompras, double totalCompras) {
         Map<String, Object> reporte = new HashMap<>();
         reporte.put("tipoReporte", tipoReporte);
@@ -107,5 +48,59 @@ public class ReporteService {
         reporte.put("totalCompras", totalCompras);
         return reporte;
     }
-    
+
+    public Map<String, Object> generarReporteVentasDiarias() {
+        LocalDate hoy = LocalDate.now();
+        Date inicio = Date.from(hoy.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date fin = Date.from(hoy.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        List<Venta> ventas = ventaRepository.findByFechaBetween(inicio, fin);
+
+        double totalVentas = ventas.stream().mapToDouble(Venta::getTotal).sum();
+        long cantidadVentas = ventas.size();
+
+        return crearReporte("Ventas Diarias", hoy, cantidadVentas, totalVentas);
+    }
+
+    public Map<String, Object> generarReporteVentasSemanales() {
+        LocalDate hoy = LocalDate.now();
+        LocalDate inicioSemana = hoy.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate finSemana = hoy.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+        Date inicio = Date.from(inicioSemana.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date fin = Date.from(finSemana.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        List<Venta> ventas = ventaRepository.findByFechaBetween(inicio, fin);
+
+        double totalVentas = ventas.stream().mapToDouble(Venta::getTotal).sum();
+        long cantidadVentas = ventas.size();
+
+        return crearReporte("Ventas Semanales", hoy, cantidadVentas, totalVentas);
+    }
+
+    public Map<String, Object> generarReporteVentasMensuales() {
+        LocalDate hoy = LocalDate.now();
+        LocalDate inicioMes = hoy.with(TemporalAdjusters.firstDayOfMonth());
+        LocalDate finMes = hoy.with(TemporalAdjusters.lastDayOfMonth());
+        Date inicio = Date.from(inicioMes.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date fin = Date.from(finMes.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        List<Venta> ventas = ventaRepository.findByFechaBetween(inicio, fin);
+
+        double totalVentas = ventas.stream().mapToDouble(Venta::getTotal).sum();
+        long cantidadVentas = ventas.size();
+
+        return crearReporte("Ventas Mensuales", hoy, cantidadVentas, totalVentas);
+    }
+
+    public Map<String, Object> generarReporteVentasAnuales() {
+        LocalDate hoy = LocalDate.now();
+        LocalDate inicioAno = hoy.with(TemporalAdjusters.firstDayOfYear());
+        LocalDate finAno = hoy.with(TemporalAdjusters.lastDayOfYear());
+        Date inicio = Date.from(inicioAno.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date fin = Date.from(finAno.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        List<Venta> ventas = ventaRepository.findByFechaBetween(inicio, fin);
+
+        double totalVentas = ventas.stream().mapToDouble(Venta::getTotal).sum();
+        long cantidadVentas = ventas.size();
+
+        return crearReporte("Ventas Anuales", hoy, cantidadVentas, totalVentas);
+    }
+
 }

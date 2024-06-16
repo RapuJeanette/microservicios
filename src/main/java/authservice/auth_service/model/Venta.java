@@ -4,7 +4,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
-import java.util.List;
 
 @Document(collection = "ventas")
 public class Venta {
@@ -12,7 +11,9 @@ public class Venta {
     private String id;
     private String vendedorId;
     private String clienteId;
-    private List<Producto> productos;
+    private String productos;
+    private int cantidad;
+    private double precioUnitario;
     private Date fecha;
     private double total;
     private double montoPagado;
@@ -22,11 +23,13 @@ public class Venta {
         this.fecha = new Date();
     }
 
-    public Venta(String vendedorId, String clienteId, List<Producto> productos, double total, double montoPagado, EstadoPago estadoPago) {
+    public Venta(String vendedorId, String clienteId, String productos, int cantidad, double precioUnitario, double total, double montoPagado, EstadoPago estadoPago) {
         this.vendedorId = vendedorId;
         this.clienteId = clienteId;
         this.productos = productos;
-        this.total = total;
+        this.cantidad = cantidad;
+        this.precioUnitario = precioUnitario;
+        this.total = total; 
         this.fecha = new Date();
         this.montoPagado = montoPagado;
         this.estadoPago = estadoPago;
@@ -56,11 +59,11 @@ public class Venta {
         this.clienteId = clienteId;
     }
 
-    public List<Producto> getProductos() {
+    public String getProductos() {
         return productos;
     }
 
-    public void setProductos(List<Producto> productos) {
+    public void setProductos(String productos) {
         this.productos = productos;
     }
 
@@ -94,5 +97,21 @@ public class Venta {
 
     public void setEstadoPago(EstadoPago estadoPago) {
         this.estadoPago = estadoPago;
+    }
+
+    public void setCantidad(int cantidad){
+        this.cantidad = cantidad;
+    }
+
+    public int getCantidad(){
+        return cantidad;
+    }
+
+    public double getPrecioUnitario(){
+        return precioUnitario;
+    }
+
+    public void setPrecioUnitario(double precioUnitario){
+        this.precioUnitario = precioUnitario;
     }
 }
