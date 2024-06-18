@@ -24,4 +24,9 @@ public class CompraController {
     public List<Compra> obtenerComprasPorUsuario(@PathVariable String usuarioId) {
         return compraService.obtenerComprasPorUsuario(usuarioId);
     }
+
+    @GetMapping
+    public List<Compra> obtenerTodasLasCompras() {
+        return compraService.obtenerTodasLasCompras();
+    }
 }

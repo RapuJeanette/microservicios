@@ -3,7 +3,7 @@ package authservice.auth_service.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Date;
+import java.util.List;
 
 @Document(collection = "devoluciones")
 public class Devolucion {
@@ -11,20 +11,17 @@ public class Devolucion {
     private String id;
     private String productoId;
     private String motivo;
-    private int cantidad;
-    private Date fecha;
+    private List<Producto> productos;
 
     // Constructor, getters y setters
 
     public Devolucion() {
-        this.fecha = new Date();
     }
 
-    public Devolucion(String productoId, String motivo, int cantidad) {
+    public Devolucion(String productoId, String motivo, List<Producto> productos) {
         this.productoId = productoId;
         this.motivo = motivo;
-        this.cantidad = cantidad;
-        this.fecha = new Date();
+        this.productos = productos;
     }
 
     public String getId() {
@@ -51,19 +48,12 @@ public class Devolucion {
         this.motivo = motivo;
     }
 
-    public int getCantidad() {
-        return cantidad;
+    public List<Producto> getProductos() {
+        return productos;
     }
 
-    public void setCantidad(int cantidad) {
-        this.cantidad = cantidad;
+    public void setProductos(List<Producto> productos) {
+        this.productos = productos;
     }
 
-    public Date getFecha() {
-        return fecha;
-    }
-
-    public void setFecha(Date fecha) {
-        this.fecha = fecha;
-    }
 }

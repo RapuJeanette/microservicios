@@ -43,6 +43,10 @@ public class VentaService {
         return ventaRepository.save(ventaRequest);
     }
 
+    public void eliminarVenta(String id) {
+        ventaRepository.deleteById(id);
+    }
+
     public List<Venta> obtenerVentasPorVendedor(String vendedorId) {
         return ventaRepository.findByVendedorId(vendedorId);
     }
